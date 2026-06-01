@@ -54,6 +54,7 @@ export default function Header() {
             <Link href="/catalog" className="hover:text-[var(--color-brand-red)] transition-colors">Catalog</Link>
             <Link href="/my-list" className="hover:text-[var(--color-brand-red)] transition-colors">My List</Link>
             <Link href="/contact" className="hover:text-[var(--color-brand-red)] transition-colors">Contact Us</Link>
+            <Link href="/admin" className="hover:text-[var(--color-brand-red)] transition-colors font-bold">Admin</Link>
           </nav>
 
           {/* Search Toggle / Input */}

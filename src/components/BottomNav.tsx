@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, LayoutGrid, Heart, Phone } from "lucide-react";
+import { Home, LayoutGrid, Heart, Phone, Lock } from "lucide-react";
 
 export default function BottomNav() {
   const pathname = usePathname();
@@ -12,6 +12,7 @@ export default function BottomNav() {
     { name: "Catalog", href: "/catalog", icon: LayoutGrid },
     { name: "My List", href: "/my-list", icon: Heart },
     { name: "Contact", href: "/contact", icon: Phone },
+    { name: "Admin", href: "/admin", icon: Lock },
   ];
 
   return (
