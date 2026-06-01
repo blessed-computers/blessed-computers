@@ -41,7 +41,6 @@ export default async function HomePage() {
                 key={product.id}
                 name={product.name}
                 price={product.price}
-                imageUrl={product.imageUrl || undefined}
               />
             ))}
           </div>

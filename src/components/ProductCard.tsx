@@ -7,7 +7,6 @@ type ProductCardProps = {
   name: string;
   price: number;
   description?: string;
-  imageUrl?: string;
 };
 
 function formatPrice(amount: number) {
@@ -30,7 +29,6 @@ export default function ProductCard({
   name,
   price,
   description,
-  imageUrl,
 }: ProductCardProps) {
   const addItem = useCartStore((state) => state.addItem);
   const [added, setAdded] = useState(false);
