@@ -23,7 +23,6 @@ export async function addProduct(formData: FormData) {
     const type = formData.get("type") as string;
     const company = formData.get("company") as string;
     const description = formData.get("description") as string || undefined;
-    const imageUrl = formData.get("imageUrl") as string || undefined;
 
     if (!name || isNaN(price) || !type || !company) {
       throw new Error("Missing required fields");
@@ -36,7 +35,6 @@ export async function addProduct(formData: FormData) {
         type,
         company,
         description,
-        imageUrl,
       }
     });
 

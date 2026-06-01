@@ -67,15 +67,7 @@ export default function ProductCard({
 
   return (
     <article className="overflow-hidden rounded-[var(--radius-brand)] border border-[var(--color-brand-border)] bg-white shadow-[0_10px_30px_rgba(10,10,10,0.05)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_40px_rgba(10,10,10,0.08)]">
-      {imageUrl ? (
-        <div className="aspect-[4/3] w-full overflow-hidden border-b border-[var(--color-brand-border)] bg-[var(--color-brand-cream)]">
-          <img
-            src={imageUrl}
-            alt={name}
-            className="h-full w-full object-cover"
-          />
-        </div>
-      ) : null}
+
 
       <div className="p-5">
         <h3 className="text-lg font-bold text-[var(--color-brand-charcoal)]">

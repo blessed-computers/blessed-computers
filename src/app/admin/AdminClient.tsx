@@ -3,13 +3,12 @@
 import { useState, useEffect } from "react";
 import { parseProductInput } from "@/lib/smart-parser";
 import { addProduct, deleteProduct } from "@/app/actions/product-actions";
-import { Trash2, Sparkles, Loader2, ImagePlus, ExternalLink } from "lucide-react";
+import { Trash2, Sparkles, Loader2 } from "lucide-react";
 
 export default function AdminClient({ products }: { products: any[] }) {
   const [rawInput, setRawInput] = useState("");
   const [parsedData, setParsedData] = useState({ name: "", type: "", company: "" });
   const [price, setPrice] = useState("");
-  const [imageFile, setImageFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSmartParse = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,42 +26,15 @@ export default function AdminClient({ products }: { products: any[] }) {
     }
   };
 
-  const uploadImageToCloudinary = async (fileOrUrl: File | string) => {
-    const formData = new FormData();
-    formData.append("file", fileOrUrl);
-    formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "Blessed-Computers");
-
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dllu596y4"}/image/upload`, {
-      method: "POST",
-      body: formData,
-    });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error.message);
-    return data.secure_url;
-  };
-
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
-    let imageUrl = "";
-    if (imageFile) {
-      try {
-        imageUrl = await uploadImageToCloudinary(imageFile);
-      } catch (err) {
-        console.error("Failed to upload image", err);
-        alert("Image upload to Cloudinary failed.");
-        setIsSubmitting(false);
-        return;
-      }
-    }
 
     const formData = new FormData();
     formData.append("name", parsedData.name || rawInput);
     formData.append("type", parsedData.type || "Other");
     formData.append("company", parsedData.company || "Other");
     formData.append("price", price);
-    if (imageUrl) formData.append("imageUrl", imageUrl);
     
     await addProduct(formData);
     
@@ -70,7 +42,6 @@ export default function AdminClient({ products }: { products: any[] }) {
     setRawInput("");
     setParsedData({ name: "", type: "", company: "" });
     setPrice("");
-    setImageFile(null);
     setIsSubmitting(false);
   };
 
@@ -166,40 +137,7 @@ export default function AdminClient({ products }: { products: any[] }) {
                   />
                 </div>
 
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-sm font-semibold text-[var(--color-brand-charcoal)] flex items-center gap-2">
-                      <ImagePlus className="h-4 w-4" /> Product Image
-                    </label>
-                    {parsedData.name && (
-                      <a 
-                        href={`https://www.google.com/search?tbm=isch&q=${encodeURIComponent(parsedData.name)}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-xs flex items-center gap-1 font-semibold text-[var(--color-brand-red)] hover:underline"
-                      >
-                        <ExternalLink className="h-3 w-3" /> Find Image
-                      </a>
-                    )}
-                  </div>
-                  
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-                    className="w-full text-sm text-[var(--color-brand-muted)]
-                      file:mr-4 file:py-2 file:px-4
-                      file:rounded-[var(--radius-brand)] file:border-0
-                      file:text-sm file:font-semibold
-                      file:bg-[var(--color-brand-cream)] file:text-[var(--color-brand-charcoal)]
-                      hover:file:bg-[var(--color-brand-border)] cursor-pointer"
-                  />
-                  {parsedData.name && (
-                    <p className="text-xs text-[var(--color-brand-muted)] mt-2">
-                      Click "Find Image" above, save a picture, and upload it here.
-                    </p>
-                  )}
-                </div>
+                {/* Removed Image Upload UI */}
 
                 <button
                   type="submit"
@@ -220,7 +158,6 @@ export default function AdminClient({ products }: { products: any[] }) {
                 <table className="w-full text-left text-sm">
                   <thead className="bg-[var(--color-brand-cream)] border-b border-[var(--color-brand-border)]">
                     <tr>
-                      <th className="px-4 py-3 font-semibold text-[var(--color-brand-charcoal)]">Image</th>
                       <th className="px-4 py-3 font-semibold text-[var(--color-brand-charcoal)]">Name</th>
                       <th className="px-4 py-3 font-semibold text-[var(--color-brand-charcoal)]">Category</th>
                       <th className="px-4 py-3 font-semibold text-[var(--color-brand-charcoal)]">Price</th>
@@ -237,15 +174,6 @@ export default function AdminClient({ products }: { products: any[] }) {
                     ) : (
                       products.map((product) => (
                         <tr key={product.id} className="hover:bg-[var(--color-brand-cream)] transition-colors">
-                          <td className="px-4 py-3">
-                            {product.imageUrl ? (
-                              <img src={product.imageUrl} alt={product.name} className="h-10 w-10 object-cover rounded-md border border-[var(--color-brand-border)]" />
-                            ) : (
-                              <div className="h-10 w-10 bg-[var(--color-brand-cream)] rounded-md border border-[var(--color-brand-border)] flex items-center justify-center">
-                                <span className="text-[10px] text-[var(--color-brand-muted)]">No img</span>
-                              </div>
-                            )}
-                          </td>
                           <td className="px-4 py-3 font-medium text-[var(--color-brand-black)]">{product.name}</td>
                           <td className="px-4 py-3 text-[var(--color-brand-muted)]">
                             {product.company} • {product.type}
