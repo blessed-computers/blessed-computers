@@ -3,14 +3,37 @@
 import { useState } from "react";
 import { parseProductInput } from "@/lib/smart-parser";
 import { addProduct, deleteProduct } from "@/app/actions/product-actions";
-import { Trash2, Sparkles, Loader2, ImagePlus } from "lucide-react";
+import { fetchProductImage } from "@/app/actions/image-search";
+import { Trash2, Sparkles, Loader2, ImagePlus, CheckCircle2 } from "lucide-react";
 
 export default function AdminClient({ products }: { products: any[] }) {
   const [rawInput, setRawInput] = useState("");
   const [parsedData, setParsedData] = useState({ name: "", type: "", company: "" });
   const [price, setPrice] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [autoImageUrl, setAutoImageUrl] = useState<string | null>(null);
+  const [isFetchingImage, setIsFetchingImage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Auto-fetch image when parsed name is generated
+  import { useEffect } from "react";
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (parsedData.name && parsedData.name.length > 3) {
+        setIsFetchingImage(true);
+        const url = await fetchProductImage(parsedData.name);
+        if (url) {
+          setAutoImageUrl(url);
+          setImageFile(null); // Clear manual file if auto fetch succeeds
+        }
+        setIsFetchingImage(false);
+      } else {
+        setAutoImageUrl(null);
+      }
+    }, 1000); // 1s debounce
+
+    return () => clearTimeout(timer);
+  }, [parsedData.name]);
 
   const handleSmartParse = (e: React.ChangeEvent<HTMLInputElement>) => {
     const text = e.target.value;
@@ -27,9 +50,9 @@ export default function AdminClient({ products }: { products: any[] }) {
     }
   };
 
-  const uploadImageToCloudinary = async (file: File) => {
+  const uploadImageToCloudinary = async (fileOrUrl: File | string) => {
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", fileOrUrl);
     formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "Blessed-Computers");
 
     const res = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dllu596y4"}/image/upload`, {
@@ -37,6 +60,7 @@ export default function AdminClient({ products }: { products: any[] }) {
       body: formData,
     });
     const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
     return data.secure_url;
   };
 
@@ -45,12 +69,13 @@ export default function AdminClient({ products }: { products: any[] }) {
     setIsSubmitting(true);
     
     let imageUrl = "";
-    if (imageFile) {
+    if (imageFile || autoImageUrl) {
       try {
-        imageUrl = await uploadImageToCloudinary(imageFile);
+        // Upload either the File object or the Google Image URL string
+        imageUrl = await uploadImageToCloudinary(imageFile || autoImageUrl!);
       } catch (err) {
         console.error("Failed to upload image", err);
-        alert("Image upload failed. Check your Cloudinary settings.");
+        alert("Image upload to Cloudinary failed.");
         setIsSubmitting(false);
         return;
       }
@@ -70,6 +95,7 @@ export default function AdminClient({ products }: { products: any[] }) {
     setParsedData({ name: "", type: "", company: "" });
     setPrice("");
     setImageFile(null);
+    setAutoImageUrl(null);
     setIsSubmitting(false);
   };
 
@@ -169,17 +195,41 @@ export default function AdminClient({ products }: { products: any[] }) {
                   <label className="block text-sm font-semibold text-[var(--color-brand-charcoal)] mb-1 flex items-center gap-2">
                     <ImagePlus className="h-4 w-4" /> Product Image
                   </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-                    className="w-full text-sm text-[var(--color-brand-muted)]
-                      file:mr-4 file:py-2 file:px-4
-                      file:rounded-[var(--radius-brand)] file:border-0
-                      file:text-sm file:font-semibold
-                      file:bg-[var(--color-brand-cream)] file:text-[var(--color-brand-charcoal)]
-                      hover:file:bg-[var(--color-brand-border)] cursor-pointer"
-                  />
+                  
+                  {isFetchingImage ? (
+                    <div className="flex items-center gap-2 text-sm text-[var(--color-brand-muted)] p-2 bg-[var(--color-brand-cream)] rounded-md border border-[var(--color-brand-border)]">
+                      <Loader2 className="h-4 w-4 animate-spin" /> Auto-fetching image from web...
+                    </div>
+                  ) : autoImageUrl && !imageFile ? (
+                    <div className="relative rounded-md overflow-hidden border border-[var(--color-brand-border)] aspect-video bg-[var(--color-brand-cream)] flex items-center justify-center">
+                      <img src={autoImageUrl} alt="Preview" className="w-full h-full object-contain" />
+                      <div className="absolute top-2 right-2 bg-white/90 px-2 py-1 rounded text-xs font-bold text-green-600 flex items-center gap-1 shadow-sm">
+                        <CheckCircle2 className="h-3 w-3" /> Auto-Fetched
+                      </div>
+                      <button 
+                        type="button"
+                        onClick={() => setAutoImageUrl(null)} 
+                        className="absolute bottom-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded hover:bg-red-600 shadow-sm"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        setImageFile(e.target.files?.[0] || null);
+                        if (e.target.files?.[0]) setAutoImageUrl(null); // Clear auto image if user uploads manual
+                      }}
+                      className="w-full text-sm text-[var(--color-brand-muted)]
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-[var(--radius-brand)] file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-[var(--color-brand-cream)] file:text-[var(--color-brand-charcoal)]
+                        hover:file:bg-[var(--color-brand-border)] cursor-pointer"
+                    />
+                  )}
                 </div>
 
                 <button
