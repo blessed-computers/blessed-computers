@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { parseProductInput } from "@/lib/smart-parser";
 import { addProduct, deleteProduct } from "@/app/actions/product-actions";
 import { fetchProductImage } from "@/app/actions/image-search";
@@ -16,7 +16,6 @@ export default function AdminClient({ products }: { products: any[] }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Auto-fetch image when parsed name is generated
-  import { useEffect } from "react";
   useEffect(() => {
     const timer = setTimeout(async () => {
       if (parsedData.name && parsedData.name.length > 3) {
